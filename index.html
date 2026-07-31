@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF8F2">
+<title>Mahadeva &amp; Yashaswini — Welcome To Our Forever</title>
+<meta name="description" content="An invitation to the wedding of Mahadeva and Yashaswini.">
+
+<!-- Open Graph (values are refreshed from config.js at runtime) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mahadeva &amp; Yashaswini">
+<meta property="og:description" content="Welcome To Our Forever">
+<meta property="og:image" content="assets/hero/hero-bg.webp">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="assets/hero/hero-bg.webp">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Great+Vibes&family=Poppins:wght@200;300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="is-loading">
+
+<!-- ═══════════════════════════════════════════════════════ PRELOADER ═══ -->
+<div id="preloader" role="status" aria-live="polite" aria-label="Loading the invitation">
+  <div class="pre__box">
+    <div class="pre__mono"><span data-pre-groom>M</span><span class="pre__amp">&amp;</span><span data-pre-bride>Y</span></div>
+    <p class="pre__sub">Welcome</p>
+    <div class="pre__track"><span class="pre__bar" id="preBar"></span></div>
+    <p class="pre__pct"><span id="prePct">0</span>%</p>
+  </div>
+</div>
+
+<!-- ambient wash that sits behind the invitation card on wide screens -->
+<div class="ambient" aria-hidden="true"></div>
+
+<!-- drifting dust motes -->
+<canvas id="dust" aria-hidden="true"></canvas>
+
+<!-- ══════════════════════════════════════════════════════ ICON SPRITE ═══ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+
+  <g id="i-fleuron">
+    <path d="M60 3.5c-4 6-5 11.2-2.6 15.6h5.2C65 14.7 64 9.5 60 3.5z"/>
+    <path d="M57.4 19.1c-7 .4-12.6 3.4-17 9-2.8 3.6-6 5-9 4-2.4-.8-3.4-3-2.2-4.9 1.1-1.7 3.4-1.8 4.6-.3 1 1.2.7 2.7-.5 3.4"/>
+    <path d="M62.6 19.1c7 .4 12.6 3.4 17 9 2.8 3.6 6 5 9 4 2.4-.8 3.4-3 2.2-4.9-1.1-1.7-3.4-1.8-4.6-.3-1 1.2-.7 2.7.5 3.4"/>
+    <path d="M55 24.6 60 28l5-3.4"/>
+  </g>
+
+  <g id="i-rule">
+    <path d="M8 10h84M148 10h84"/>
+    <path d="M100 10l5-4 5 4-5 4zM130 10l5-4 5 4-5 4z"/>
+    <path d="M120 16.5c-4.5-3.9-9-6.9-9-10.3 0-2.6 2-4.2 4.2-4.2 2 0 3.7 1.2 4.8 3 1.1-1.8 2.8-3 4.8-3 2.2 0 4.2 1.6 4.2 4.2 0 3.4-4.5 6.4-9 10.3z"/>
+  </g>
+
+  <g id="i-rule-sm">
+    <path d="M8 10h96M136 10h96"/>
+    <path d="M112 10l8-5 8 5-8 5z"/>
+  </g>
+
+  <g id="i-heart"><path d="M12 20.5C6.6 16 3 12.9 3 9.1 3 6.2 5.2 4 8 4c1.9 0 3.3 1 4 2.3C12.7 5 14.1 4 16 4c2.8 0 5 2.2 5 5.1 0 3.8-3.6 6.9-9 11.4z"/></g>
+  <g id="i-pin"><path d="M12 21.5s7-6.2 7-11.2a7 7 0 1 0-14 0c0 5 7 11.2 7 11.2z"/><circle cx="12" cy="10" r="2.6"/></g>
+  <g id="i-camera"><path d="M4 8h3l1.6-2.4h6.8L17 8h3a1.6 1.6 0 0 1 1.6 1.6v8A1.6 1.6 0 0 1 20 19.2H4A1.6 1.6 0 0 1 2.4 17.6v-8A1.6 1.6 0 0 1 4 8z"/><circle cx="12" cy="13.4" r="3.6"/></g>
+  <g id="i-play"><path d="M9 17.5V5.4l10-2v12"/><circle cx="6.6" cy="17.8" r="2.5"/><circle cx="16.6" cy="15.6" r="2.5"/></g>
+  <g id="i-pause"><rect x="7" y="5" width="3.4" height="14" rx="1.2"/><rect x="13.6" y="5" width="3.4" height="14" rx="1.2"/></g>
+  <g id="i-instagram"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.2"/><circle cx="12" cy="12" r="4.2"/><circle cx="16.9" cy="7.1" r="1.05" fill="currentColor" stroke="none"/></g>
+  <g id="i-whatsapp"><path d="M3.4 20.6 4.7 16.5A8.3 8.3 0 1 1 7.9 19.5z"/><path d="M8.9 8.3c-.8.4-1.2 1.3-1 2.2.5 2.5 2.5 4.5 5 5 .9.2 1.8-.2 2.2-1"/></g>
+  <g id="i-phone"><path d="M6.4 3.6h2.2l1.6 3.9-2 1.4a12.2 12.2 0 0 0 5.2 5.2l1.4-2 3.9 1.6v2.2a2 2 0 0 1-2.2 2A15.6 15.6 0 0 1 4.4 5.8a2 2 0 0 1 2-2.2z"/></g>
+  <g id="i-close"><path d="M6 6l12 12M18 6 6 18"/></g>
+  <g id="i-prev"><path d="M14.6 5.4 8 12l6.6 6.6"/></g>
+  <g id="i-next"><path d="M9.4 5.4 16 12l-6.6 6.6"/></g>
+
+
+  <!-- event icons, mirrored from assets/events/*.svg -->
+  <g id="ev-mehendi"><path d="M22 54c-3-6-4-12-4-18 0-3 .4-6 1-9"/>
+<path d="M42 54c3-6 4-12 4-18 0-3-.4-6-1-9"/>
+<path d="M19 27V17a2.6 2.6 0 0 1 5.2 0v9"/>
+<path d="M24.2 26V12a2.6 2.6 0 0 1 5.2 0v13"/>
+<path d="M29.4 25V10.5a2.6 2.6 0 0 1 5.2 0V25"/>
+<path d="M34.6 25.5V13a2.6 2.6 0 0 1 5.2 0v13"/>
+<path d="M39.8 27.5v-6a2.6 2.6 0 0 1 5.2 0v6"/>
+<path d="M22 54h20"/>
+<circle cx="32" cy="38" r="4.5"/>
+<path d="M32 30.5v-2M32 47.5v-2M24.5 38h-2M41.5 38h-2"/></g>
+  <g id="ev-haldi"><ellipse cx="32" cy="16.5" rx="4.6" ry="9.5" transform="rotate(0 32 32)"/><ellipse cx="32" cy="16.5" rx="4.6" ry="9.5" transform="rotate(45 32 32)"/><ellipse cx="32" cy="16.5" rx="4.6" ry="9.5" transform="rotate(90 32 32)"/><ellipse cx="32" cy="16.5" rx="4.6" ry="9.5" transform="rotate(135 32 32)"/><ellipse cx="32" cy="16.5" rx="4.6" ry="9.5" transform="rotate(180 32 32)"/><ellipse cx="32" cy="16.5" rx="4.6" ry="9.5" transform="rotate(225 32 32)"/><ellipse cx="32" cy="16.5" rx="4.6" ry="9.5" transform="rotate(270 32 32)"/><ellipse cx="32" cy="16.5" rx="4.6" ry="9.5" transform="rotate(315 32 32)"/><circle cx="32" cy="32" r="6"/><circle cx="32" cy="32" r="2.2"/></g>
+  <g id="ev-sangeet"><path d="M20 30c0 12 4 20 12 20s12-8 12-20"/>
+<path d="M18.5 30h27"/>
+<path d="M22 24.5h20l3 5.5H19z"/>
+<path d="M26 24.5c0-4 2.7-6 6-6s6 2 6 6"/>
+<path d="M32 18.5c-3-2-4-4-4-6.5 0 0 2.6 1 4 3 1.4-2 4-3 4-3 0 2.5-1 4.5-4 6.5z"/>
+<path d="M24 38h16M27 44h10"/></g>
+  <g id="ev-wedding"><path d="M12 54V26M52 54V26"/>
+<path d="M9 26h46"/>
+<path d="M12 26c0-8 9-14 20-14s20 6 20 14"/>
+<path d="M32 12V7"/><circle cx="32" cy="5" r="1.8"/>
+<path d="M18 26v6c0 2 1.6 3 3 2M46 26v6c0 2-1.6 3-3 2"/>
+<path d="M24 54V40a8 8 0 0 1 16 0v14"/>
+<path d="M9 54h46"/></g>
+  <g id="ev-reception"><circle cx="26" cy="38" r="12"/>
+<circle cx="40" cy="38" r="12"/>
+<path d="M33 15.5 29 22h8z"/>
+<path d="M33 15.5V11"/>
+<path d="M33 8.5v-3M27.5 10.5l-2-2.2M38.5 10.5l2-2.2"/></g>
+  <g id="ev-vidai"><path d="M32 14c5 5 7.5 10.5 7.5 16.5S37 42 32 46c-5-4-7.5-9.5-7.5-15.5S27 19 32 14z"/>
+<path d="M22 22c1 6 1.5 11 4 16s4.5 7 6 8c-4 1-9-1-12.5-5S15 31 16 25c2-1 4-2 6-3z"/>
+<path d="M42 22c-1 6-1.5 11-4 16s-4.5 7-6 8c4 1 9-1 12.5-5S49 31 48 25c-2-1-4-2-6-3z"/>
+<path d="M14 48c5 3 11 4.5 18 4.5S45 51 50 48"/></g>
+</defs></svg>
+
+
+<main class="stage">
+
+  <!-- ═════════════════════════════════════════════════ 1 · HERO ═══ -->
+  <section id="hero" class="section" aria-labelledby="heroNames">
+    <div class="section__bg" aria-hidden="true">
+      <img src="assets/hero/hero-bg.webp" alt="" width="887" height="1774" fetchpriority="high" decoding="async">
+    </div>
+    <div class="section__veil" aria-hidden="true"></div>
+    <div class="rays" aria-hidden="true"></div>
+    <div class="silk" aria-hidden="true"></div>
+
+    <!-- the one bold gesture: the cusped arch, drawn in gold hairline -->
+    <div class="arch" aria-hidden="true">
+      <svg class="arch__head" viewBox="0 0 400 272" preserveAspectRatio="xMidYMin meet">
+        <path id="archPath" d="M20 269C20 263.2 19.1 240.9 20 230.6 20.9 220.3 23.2 211 25.8 201.8 28.3 192.6 32.4 179.5 36.8 170.6 41.2 161.8 49 151.7 54.6 144.2 60.1 136.7 66.9 128.5 72.8 121.7 78.7 114.9 86.3 105.3 93 100.1 99.6 94.9 109.4 90.5 116 87.6 122.6 84.7 129.8 83.4 136.2 80.9 142.6 78.4 151.1 75.4 157.8 71.3 164.4 67.2 172.9 60.3 179.4 54 185.8 47.7 193.7 30 200 30 206.3 30 214.2 47.7 220.6 54 227.1 60.3 235.6 67.2 242.2 71.3 248.9 75.4 257.4 78.4 263.8 80.9 270.2 83.4 277.4 84.7 284 87.6 290.6 90.5 300.4 94.9 307 100.1 313.7 105.3 321.3 114.9 327.2 121.7 333.1 128.5 339.9 136.7 345.4 144.2 351 151.7 358.8 161.8 363.2 170.6 367.6 179.5 371.7 192.6 374.2 201.8 376.8 211 379.1 220.3 380 230.6 380.9 240.9 380 263.2 380 269"/>
+      </svg>
+      <span class="arch__col"></span>
+    </div>
+
+    <div class="hero__type">
+      <p class="eyebrow reveal" data-anim="hero" data-split="chars" data-hero-eyebrow>Welcome To Our Forever</p>
+
+      <svg class="orn orn--fleuron reveal" data-anim="hero" viewBox="0 0 120 44" fill="none" stroke="currentColor"
+           stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <use href="#i-fleuron"/>
+      </svg>
+
+      <div class="hero__names" id="heroNames">
+        <h1 class="hero__groom reveal" data-anim="hero" data-split="chars" data-groom>Mahadeva</h1>
+        <p class="hero__joiner reveal" data-anim="hero" data-joiner>and</p>
+        <p class="hero__bride reveal" data-anim="hero" data-split="chars" data-bride>Yashaswini</p>
+      </div>
+
+      <svg class="hero__heart reveal" data-anim="hero" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.3" stroke-linejoin="round" id="heroHeart" aria-hidden="true">
+        <use href="#i-heart"/>
+      </svg>
+    </div>
+
+    <div class="hero__figure">
+      <div class="hero__glow" aria-hidden="true"></div>
+      <picture>
+        <source srcset="assets/hero/couple.webp" type="image/webp">
+        <img class="hero__couple" id="heroCouple" src="assets/hero/couple.png"
+             width="887" height="1512" alt="Mahadeva and Yashaswini, forehead to forehead"
+             fetchpriority="high" decoding="async">
+      </picture>
+    </div>
+
+    <div class="scroll-cue reveal" data-anim="hero" aria-hidden="true">
+      <span class="scroll-cue__line"></span>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ 2 · DATE REVEAL ═══ -->
+  <section id="date" class="section" aria-labelledby="dateHead">
+    <div class="section__bg" aria-hidden="true">
+      <img src="assets/hero/hero-bg.webp" alt="" width="887" height="1774" loading="lazy" decoding="async">
+    </div>
+    <div class="section__veil" aria-hidden="true"></div>
+
+    <div class="section__inner section__head">
+      <svg class="orn orn--fleuron reveal" viewBox="0 0 120 44" fill="none" stroke="currentColor"
+           stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <use href="#i-fleuron"/>
+      </svg>
+
+      <p class="eyebrow reveal" data-date-eyebrow>The date we&rsquo;ve been waiting for is almost here</p>
+      <h2 class="h2 reveal" id="dateHead" data-split="chars" data-anim="head">Date Reveal</h2>
+
+      <svg class="orn orn--rule reveal" viewBox="0 0 240 20" fill="none" stroke="currentColor"
+           stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <use href="#i-rule"/>
+      </svg>
+
+      <!-- revealed with a vertical mask wipe -->
+      <div class="date__card" id="dateCard">
+        <p class="date__label" data-date-label>We&rsquo;re getting married on</p>
+        <p class="date__value">
+          <span data-date-day>27</span>
+          <span class="date__dot" aria-hidden="true">&#9670;</span>
+          <span data-date-mon>NOV</span>
+          <span class="date__dot" aria-hidden="true">&#9670;</span>
+          <span data-date-year>2026</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ 3 · COUNTDOWN ═══ -->
+  <section id="countdown" class="section" aria-labelledby="countHead">
+    <div class="section__bg" aria-hidden="true">
+      <img src="assets/hero/hero-bg.webp" alt="" width="887" height="1774" loading="lazy" decoding="async">
+    </div>
+    <div class="section__veil" aria-hidden="true"></div>
+
+    <div class="section__inner section__head">
+      <p class="eyebrow reveal" id="countHead" data-count-label>Counting down to forever</p>
+
+      <div class="count" id="countGrid" role="timer" aria-live="off"
+           aria-label="Time remaining until the wedding">
+        <!-- cells injected from config -->
+      </div>
+      <p class="count__done" id="countDone" hidden></p>
+
+      <svg class="orn orn--rule reveal" viewBox="0 0 240 20" fill="none" stroke="currentColor"
+           stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <use href="#i-rule"/>
+      </svg>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════ 4 · EVENTS ═══ -->
+  <section id="events" class="section" aria-labelledby="eventsHead">
+    <div class="section__bg" aria-hidden="true">
+      <img src="assets/hero/hero-bg.webp" alt="" width="887" height="1774" loading="lazy" decoding="async">
+    </div>
+    <div class="section__veil" aria-hidden="true"></div>
+
+    <div class="section__inner">
+      <div class="section__head">
+        <svg class="orn orn--fleuron reveal" viewBox="0 0 120 44" fill="none" stroke="currentColor"
+             stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <use href="#i-fleuron"/>
+        </svg>
+        <p class="eyebrow reveal">Our</p>
+        <h2 class="h2 reveal" id="eventsHead" data-split="chars" data-anim="head">Events</h2>
+        <svg class="orn orn--rule reveal" viewBox="0 0 240 20" fill="none" stroke="currentColor"
+             stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <use href="#i-rule"/>
+        </svg>
+      </div>
+
+      <ul class="events" id="eventList"><!-- injected from config --></ul>
+
+      <svg class="orn orn--rule-sm reveal" viewBox="0 0 240 20" fill="none" stroke="currentColor"
+           stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+           style="margin-top:clamp(1.4rem,5vw,2rem)">
+        <use href="#i-rule-sm"/>
+      </svg>
+    </div>
+  </section>
+
+
+  <!-- ═════════════════════════════════════════════ 5 · GALLERY ═══ -->
+  <section id="gallery" class="section" aria-labelledby="galleryHead">
+    <div class="section__bg" aria-hidden="true">
+      <img src="assets/hero/hero-bg.webp" alt="" width="887" height="1774" loading="lazy" decoding="async">
+    </div>
+    <div class="section__veil" aria-hidden="true"></div>
+
+    <div class="section__inner">
+      <div class="section__head">
+        <svg class="orn orn--fleuron reveal" viewBox="0 0 120 44" fill="none" stroke="currentColor"
+             stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <use href="#i-fleuron"/>
+        </svg>
+        <p class="eyebrow reveal">Our</p>
+        <h2 class="h2 reveal" id="galleryHead" data-split="chars" data-anim="head">Memories</h2>
+        <svg class="orn orn--rule reveal" viewBox="0 0 240 20" fill="none" stroke="currentColor"
+             stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <use href="#i-rule"/>
+        </svg>
+      </div>
+
+      <!-- the cinema plate: crossfades on its own timer, Ken Burns on each slide -->
+      <div class="cinema reveal" id="cinema" data-anim="cinema" role="button" tabindex="0"
+           aria-label="Open the photo viewer">
+        <div class="cinema__wash" aria-hidden="true"></div>
+        <div class="cinema__dots" id="cinemaDots" aria-hidden="true"></div>
+      </div>
+
+      <!-- the constellation: every still on its own float timeline -->
+      <div class="stills" id="stills"><!-- injected from config --></div>
+
+      <svg class="orn orn--rule-sm reveal" viewBox="0 0 240 20" fill="none" stroke="currentColor"
+           stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+           style="margin-top:clamp(1.4rem,5vw,2rem)">
+        <use href="#i-rule-sm"/>
+      </svg>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════ 6 · LOCATION ═══ -->
+  <section id="location" class="section" aria-labelledby="locHead">
+    <div class="section__bg" aria-hidden="true">
+      <img src="assets/hero/hero-bg.webp" alt="" width="887" height="1774" loading="lazy" decoding="async">
+    </div>
+    <div class="section__veil" aria-hidden="true"></div>
+
+    <div class="section__inner">
+      <div class="section__head">
+        <svg class="orn orn--fleuron reveal" viewBox="0 0 120 44" fill="none" stroke="currentColor"
+             stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <use href="#i-fleuron"/>
+        </svg>
+        <p class="eyebrow reveal">Our</p>
+        <h2 class="h2 reveal" id="locHead" data-split="chars" data-anim="head">Location</h2>
+        <svg class="orn orn--rule reveal" viewBox="0 0 240 20" fill="none" stroke="currentColor"
+             stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <use href="#i-rule"/>
+        </svg>
+      </div>
+
+      <div class="venue reveal" id="venueCard" data-anim="venue">
+        <div class="venue__shot">
+          <img id="venueShot" src="assets/location/venue.webp" alt="" width="522" height="246"
+               loading="lazy" decoding="async">
+        </div>
+        <a class="venue__map" id="venueMap" href="#" target="_blank" rel="noopener noreferrer"
+           aria-label="Open the venue in Google Maps">
+          <img src="assets/location/map.webp" alt="Map showing the venue on Outer Ring Road"
+               width="522" height="278" loading="lazy" decoding="async">
+        </a>
+      </div>
+
+      <svg class="venue__pin reveal" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.3" stroke-linejoin="round" aria-hidden="true">
+        <use href="#i-pin"/>
+      </svg>
+
+      <h3 class="venue__name reveal" data-venue-name>Sri Venkateswara Kalyana Mandapam</h3>
+      <address class="venue__addr reveal" data-venue-addr>
+        No. 123, Outer Ring Road<br>NGEF Layout, Bangalore<br>Karnataka 560038
+      </address>
+
+      <div style="text-align:center">
+        <a class="btn reveal" id="mapBtn" href="#" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+               stroke-linejoin="round" aria-hidden="true"><use href="#i-pin"/></svg>
+          <span data-map-label>View on map</span>
+          <span class="btn__shine" aria-hidden="true"></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ 7 · BLESSINGS ═══ -->
+  <section id="blessings" class="section" aria-labelledby="blessHead">
+    <div class="section__bg" aria-hidden="true">
+      <img src="assets/hero/hero-bg.webp" alt="" width="887" height="1774" loading="lazy" decoding="async">
+    </div>
+    <div class="section__veil" aria-hidden="true"></div>
+
+    <div class="section__inner section__head">
+      <svg class="orn orn--fleuron reveal" viewBox="0 0 120 44" fill="none" stroke="currentColor"
+           stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <use href="#i-fleuron"/>
+      </svg>
+      <p class="eyebrow reveal" id="blessHead">Blessings</p>
+
+      <blockquote class="bless__quote reveal" data-split="words" data-anim="bless" data-bless-quote>
+        Two souls, one light &mdash; bound by the fire, blessed by the elders, carried forward by love.
+      </blockquote>
+
+      <svg class="orn orn--rule reveal" viewBox="0 0 240 20" fill="none" stroke="currentColor"
+           stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <use href="#i-rule"/>
+      </svg>
+
+      <p class="bless__by reveal" data-bless-by>With the blessings of our families</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════ 8 · FOOTER ═══ -->
+  <footer class="section footer" id="footer">
+    <div class="section__inner">
+      <svg class="orn orn--fleuron reveal" viewBox="0 0 120 44" fill="none" stroke="currentColor"
+           stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <use href="#i-fleuron"/>
+      </svg>
+
+      <p class="footer__names reveal" data-footer-names>Mahadeva &amp; Yashaswini</p>
+
+      <div class="footer__links">
+        <button class="iconbtn reveal" id="musicBtn" type="button" hidden
+                aria-pressed="false" aria-label="Play background music">
+          <svg class="ico--play"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><use href="#i-play"/></svg>
+          <svg class="ico--pause" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><use href="#i-pause"/></svg>
+        </button>
+
+        <a class="iconbtn reveal" id="igLink" href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><use href="#i-instagram"/></svg>
+        </a>
+        <a class="iconbtn reveal" id="waLink" href="#" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><use href="#i-whatsapp"/></svg>
+        </a>
+        <a class="iconbtn reveal" id="telLink" href="#" aria-label="Call us">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><use href="#i-phone"/></svg>
+        </a>
+      </div>
+
+      <p class="footer__note reveal">&copy; <span id="year">2026</span> <span data-footer-copy>Mahadeva &amp; Yashaswini</span></p>
+    </div>
+  </footer>
+
+</main>
+
+
+<!-- ════════════════════════════════════════════ FULLSCREEN VIEWER ═══ -->
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Photo viewer" tabindex="-1">
+  <div class="viewer__bar">
+    <span class="viewer__count"><span id="vwNow">1</span> / <span id="vwAll">7</span></span>
+    <button class="viewer__btn" id="vwClose" type="button" aria-label="Close the viewer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><use href="#i-close"/></svg>
+    </button>
+  </div>
+
+  <button class="viewer__btn viewer__nav viewer__nav--prev" id="vwPrev" type="button" aria-label="Previous photo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-prev"/></svg>
+  </button>
+  <button class="viewer__btn viewer__nav viewer__nav--next" id="vwNext" type="button" aria-label="Next photo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-next"/></svg>
+  </button>
+
+  <div class="viewer__canvas" id="vwCanvas">
+    <img class="viewer__img" id="vwImg" src="" alt="" draggable="false">
+  </div>
+
+  <p class="viewer__hint">Pinch to zoom &middot; drag to pan &middot; swipe to browse</p>
+</div>
+
+<audio id="bgAudio" loop preload="none"></audio>
+
+<noscript>
+  <p style="text-align:center;padding:2rem;font-size:.8rem;letter-spacing:.1em">
+    This invitation uses JavaScript for its photographs and countdown.
+    Please enable it, or call us using the number on the invitation card.
+  </p>
+</noscript>
+
+<!-- config first, then libraries, then the site -->
+<script src="config.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/split-type@0.3.4/umd/index.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js" defer></script>
+<script src="script.js" defer></script>
+</body>
+</html>
