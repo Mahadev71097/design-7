@@ -425,68 +425,18 @@ button {
   opacity: .75;
 }
 
-/* Right-rail scroll guide — a hairline track with a mote running down it,
-   a vertical label, and a chevron. Lives on the right side of hero section. */
-.scrollguide {
+.scroll-cue {
   position: absolute;
-  right: clamp(.85rem, 4.5vw, 1.6rem);
-  left: auto;
-  bottom: clamp(1.4rem, 6vw, 2.4rem);
+  left: 50%; bottom: 1.15rem;
+  transform: translateX(-50%);
   z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .7rem;
-  opacity: 0;
-  pointer-events: auto;
-  cursor: pointer;
-  transition: transform .3s var(--ease), filter .3s var(--ease);
-}
-.scrollguide:hover {
-  transform: translateY(3px);
-  filter: drop-shadow(0 0 6px rgba(182, 140, 70, .6));
-}
-.scrollguide__label {
-  writing-mode: vertical-rl;
-  font-size: .52rem;
-  font-weight: 300;
-  letter-spacing: .42em;
-  text-transform: uppercase;
+  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  font-size: .54rem; letter-spacing: .4em; text-transform: uppercase;
   color: var(--ink-faint);
 }
-.scrollguide__track {
-  position: relative;
-  width: 1px;
-  height: clamp(38px, 10vw, 54px);
-  background: linear-gradient(180deg, transparent, var(--line), transparent);
-  overflow: hidden;
-}
-.scrollguide__dot {
-  position: absolute;
-  left: -1.5px;
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: var(--gold);
-  box-shadow: 0 0 6px rgba(182,140,70,.8);
-  animation: guide-run 1.9s var(--ease) infinite;
-}
-@keyframes guide-run {
-  0%   { transform: translateY(-6px); opacity: 0; }
-  22%  { opacity: 1; }
-  78%  { opacity: 1; }
-  100% { transform: translateY(56px); opacity: 0; }
-}
-.scrollguide__arrow {
-  width: 15px; height: 15px;
-  color: var(--gold);
-  animation: guide-nudge 1.9s var(--ease) infinite;
-}
-@keyframes guide-nudge {
-  0%, 100% { transform: translateY(0);   opacity: .55; }
-  50%      { transform: translateY(3px); opacity: 1;   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .scrollguide__dot, .scrollguide__arrow { animation: none; }
+.scroll-cue__line {
+  width: 1px; height: 34px;
+  background: linear-gradient(180deg, var(--gold), transparent);
 }
 
 /* ══════════════════════════════════════════════════ 08 · DATE REVEAL ═══ */
@@ -744,66 +694,46 @@ button {
    height, so there is no such thing as a short tile leaving a hole beside a
    tall one. Pictures keep their own aspect ratio via width/height attributes,
    which also means the boxes are reserved before the bytes land — no CLS. */
-/* Locked 2-column CSS Grid layout for Gallery — consistent on PC, tablet, and mobile */
 .stills {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: clamp(.38rem, 1.8vw, .65rem);
-  margin-top: clamp(.7rem, 2.8vw, 1.1rem);
-  width: 100%;
+  --gap: clamp(.28rem, 1.3vw, .42rem);   /* ~40% tighter than before */
+  columns: 2;
+  column-gap: var(--gap);
+  margin-top: clamp(.55rem, 2.4vw, .8rem);
+  orphans: 1; widows: 1;
 }
-
 .still {
   position: relative;
   display: block;
   overflow: hidden;
-  border-radius: 14px;
+  margin: 0 0 var(--gap);
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  border-radius: 12px;
   border: 1px solid var(--line);
   box-shadow: var(--shadow-soft);
   cursor: zoom-in;
   background: var(--ivory-deep);
-  aspect-ratio: 4 / 3;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transition: box-shadow .45s var(--ease), border-color .45s var(--ease);
+  will-change: transform;
+  transition: box-shadow .5s var(--ease), border-color .5s var(--ease);
 }
-
 .still img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;              /* intrinsic ratio from the width/height attrs */
   display: block;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transition: transform .6s var(--ease-out);
+  transition: transform .9s var(--ease-out);
 }
-
-.still:hover {
-  border-color: var(--gold);
-  box-shadow: var(--shadow-lift);
-}
-
-.still:hover img {
-  transform: scale(1.05);
-}
-
+.still:hover { border-color: var(--gold); box-shadow: var(--shadow-lift); }
+.still:hover img { transform: scale(1.06); }
 .still::after {
   content: '';
   position: absolute; inset: 0;
   pointer-events: none;
   background: linear-gradient(190deg, rgba(255,252,244,.14), transparent 42%);
 }
-
+/* a banner picture breaks out and runs the full width */
 .still--pano {
-  grid-column: 1 / -1;
-  aspect-ratio: 2.35 / 1;
-}
-
-.still--tall {
-  grid-row: span 2;
-  aspect-ratio: 0.72 / 1;
+  column-span: all;
+  margin-bottom: var(--gap);
 }
 
 /* an image that fails to load leaves an elegant plate, never a broken icon */
@@ -1076,12 +1006,10 @@ button {
   transform: translate(-50%, -50%) scale(0);
 }
 
-/* ═══════════════════════════════════════════════════ 16 · REVEAL STATES ═══ */
+/* ═══════════════════════════════════════════════ 16 · REVEAL STATES ═══ */
 /* JS adds .js to <html>; until GSAP has set its own start values we keep
    animated nodes invisible so nothing flashes in unstyled. */
-.js .reveal,
-.js .hero__couple,
-.js .hero__glow { opacity: 0; }
+.js .reveal      { opacity: 0; }
 
 /* ══════════════════════════════════════════════════ 17 · FALLBACKS ═══ */
 /* No JS, or a CDN that failed: show the whole invitation, statically. */
@@ -1101,7 +1029,11 @@ button {
 
 /* ═════════════════════════════════════════════════ 18 · RESPONSIVE ═══ */
 
-
+/* ---- larger phones / small tablets ---- */
+@media (min-width: 480px) {
+  .still--tall { grid-column: span 3; }
+  .still--box  { grid-column: span 3; }
+}
 
 /* ---- the invitation becomes a floating card ---- */
 @media (min-width: 700px) {
@@ -1109,7 +1041,7 @@ button {
   .stage {
     box-shadow: 0 40px 120px rgba(120, 94, 50, .22), 0 0 0 1px rgba(182,140,70,.16);
   }
-  .scrollguide__label { font-size: .56rem; }
+  .scroll-cue { font-size: .58rem; }
 }
 
 /* ---- desktop: a little more air, same proportions ---- */
@@ -1145,13 +1077,9 @@ button {
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
   box-shadow: 0 6px 20px rgba(182,140,70,.16);
-  opacity: .82;                      /* sits back until it is wanted */
   transition: transform .4s var(--ease), border-color .4s var(--ease),
-              color .4s var(--ease), background .4s var(--ease),
-              opacity .4s var(--ease);
+              color .4s var(--ease), background .4s var(--ease);
 }
-.musicfab:hover, .musicfab:focus-visible { opacity: 1; }
-.musicfab.is-playing { opacity: .95; }
 .musicfab.is-ready { display: grid; }
 .musicfab:hover { transform: scale(1.07); border-color: var(--gold); }
 .musicfab svg { width: 19px; height: 19px; }
@@ -1177,35 +1105,13 @@ button {
   background: linear-gradient(145deg, #C79E58, var(--gold) 46%, #9C763A);
   border-color: rgba(255,250,238,.5);
 }
-/* While playing, the icons step aside for a small equaliser. It is the one
-   element on the page allowed to move quickly — it is reporting a fact. */
-.musicfab .eq {
-  display: none;
-  align-items: flex-end;
-  gap: 2px;
-  height: 15px;
-}
-.musicfab .eq i {
-  display: block;
-  width: 2.5px;
-  border-radius: 2px;
-  background: currentColor;
-  transform-origin: 50% 100%;
-}
-.musicfab .eq i:nth-child(1) { height: 7px;  animation: eq-a .9s ease-in-out infinite; }
-.musicfab .eq i:nth-child(2) { height: 14px; animation: eq-b 1.1s ease-in-out infinite; }
-.musicfab .eq i:nth-child(3) { height: 9px;  animation: eq-c .8s ease-in-out infinite; }
-@keyframes eq-a { 0%,100% { transform: scaleY(.45); } 50% { transform: scaleY(1); } }
-@keyframes eq-b { 0%,100% { transform: scaleY(1);   } 50% { transform: scaleY(.35); } }
-@keyframes eq-c { 0%,100% { transform: scaleY(.7);  } 45% { transform: scaleY(1); } }
+/* the note turns slowly while it plays */
+.musicfab.is-playing svg { animation: fab-spin 9s linear infinite; }
+@keyframes fab-spin { to { transform: rotate(360deg); } }
 
 .musicfab .ico--pause { display: none; }
 .musicfab.is-playing .ico--play  { display: none; }
-.musicfab.is-playing .ico--pause { display: none; }
-.musicfab.is-playing .eq         { display: flex; }
-/* the pause glyph returns on hover, so the control still says what it does */
-.musicfab.is-playing:hover .eq         { display: none; }
-.musicfab.is-playing:hover .ico--pause { display: block; }
+.musicfab.is-playing .ico--pause { display: block; animation: none; }
 
 /* ═══════════════════════════════════════════ 20 · LIVE MAP & ADDRESS ═══ */
 .venue__map {
@@ -1284,7 +1190,7 @@ button {
 .footer__made .heart { color: #C0693F; font-style: normal; }
 
 @media (prefers-reduced-motion: reduce) {
-  .musicfab::before, .musicfab .eq i { animation: none; }
+  .musicfab::before, .musicfab.is-playing svg { animation: none; }
 }
 
 /* ═══════════════════════════════════════════════ 22 · BRANDING BAND ═══ */
@@ -1385,74 +1291,27 @@ a.brand__link:hover .brand__name { color: var(--gold); }
   overflow: hidden;
   background: var(--ivory);
   text-align: center;
-  transform: translateZ(0);
 }
 .cover[hidden] { display: none; }
 
 /* poster and video occupy the same box; the video fades over the poster */
-.cover__backdrop {
-  position: absolute; inset: -8%;
-  background: var(--ivory) center / cover no-repeat;
-  filter: blur(46px) saturate(.9) brightness(1.05);
-  transform: scale(1.15) translate3d(0,0,0);
-  opacity: .55;
-  pointer-events: none;
-  transition: opacity .6s var(--ease), filter .6s var(--ease);
-}
-.cover.is-playing .cover__backdrop {
-  filter: blur(12px);
-  opacity: .25;
-}
-
-/* The stage. Full-bleed on a phone. On anything wider it becomes a 9:16
-   portrait card, because the film was shot portrait and cropping it to a
-   laptop's landscape viewport throws most of the frame away. */
-.cover__frame {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  background: var(--ivory);
-  transform: translate3d(0,0,0);
-}
-@media (min-width: 700px) {
-  .cover__frame {
-    height: 100svh;
-    width: auto;
-    aspect-ratio: 9 / 16;
-    max-width: 100vw;
-    box-shadow: 0 40px 120px rgba(120, 94, 50, .3);
-  }
-}
-
-.cover__poster {
-  position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: center;
-  z-index: 0;
-}
+.cover__poster,
 .cover__video {
   position: absolute;
   inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
   object-position: center;
-  z-index: 1;
-  background-color: transparent !important;
+}
+.cover__video {
   opacity: 0;
-  transform: translate3d(0,0,0);
-  backface-visibility: hidden;
+  /* promoted for the whole of its short life, then released in script.js */
   will-change: opacity;
 }
 .cover.is-playing .cover__video { opacity: 1; }
 
 .cover__veil {
   position: absolute; inset: 0;
-  z-index: 2;
   pointer-events: none;
   background:
     radial-gradient(78% 55% at 50% 38%, rgba(252,249,243,.72), rgba(252,249,243,.18) 62%, transparent 80%),
@@ -1463,7 +1322,7 @@ a.brand__link:hover .brand__name { color: var(--gold); }
 
 .cover__body {
   position: relative;
-  z-index: 3;
+  z-index: 2;
   padding: var(--pad-x);
   max-width: 30rem;
 }
@@ -1490,86 +1349,7 @@ a.brand__link:hover .brand__name { color: var(--gold); }
   color: var(--ink-soft);
   line-height: 1.5;
 }
-.cover__cta {
-  position: relative;
-  overflow: visible;
-  margin-top: clamp(1.6rem, 6.5vw, 2.4rem);
-}
-
-/* Hand click animation on cover CTA button */
-.cover__hand-wrap {
-  position: absolute;
-  right: -8px;
-  bottom: -16px;
-  width: 36px;
-  height: 36px;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.cover__hand-icon {
-  width: 28px;
-  height: 28px;
-  color: var(--gold-light);
-  filter: drop-shadow(0 3px 6px rgba(111, 91, 62, .45));
-  animation: hand-click-tap 2s var(--ease) infinite;
-  transform-origin: 30% 10%;
-}
-
-.cover__hand-ripple {
-  position: absolute;
-  left: 2px;
-  top: -4px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1.5px solid var(--gold-light);
-  background: rgba(217, 190, 133, .25);
-  animation: hand-click-ripple 2s var(--ease) infinite;
-  pointer-events: none;
-}
-
-@keyframes hand-click-tap {
-  0% {
-    transform: translate(8px, 10px) rotate(12deg) scale(1.1);
-    opacity: 0;
-  }
-  20% {
-    transform: translate(2px, 3px) rotate(4deg) scale(1);
-    opacity: 1;
-  }
-  38% {
-    transform: translate(-3px, -4px) rotate(0deg) scale(0.85);
-    opacity: 1;
-  }
-  52% {
-    transform: translate(2px, 3px) rotate(4deg) scale(1);
-    opacity: 1;
-  }
-  75%, 100% {
-    transform: translate(8px, 10px) rotate(12deg) scale(1.1);
-    opacity: 0;
-  }
-}
-
-@keyframes hand-click-ripple {
-  0%, 34% {
-    transform: scale(0.2);
-    opacity: 0;
-  }
-  38% {
-    transform: scale(0.5);
-    opacity: 0.95;
-  }
-  70% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
-}
+.cover__cta { margin-top: clamp(1.6rem, 6.5vw, 2.4rem); }
 
 .cover__skip {
   position: absolute;
@@ -1599,5 +1379,5 @@ a.brand__link:hover .brand__name { color: var(--gold); }
 body.is-covered .musicfab { display: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  .cover__video, .cover__hand-icon, .cover__hand-ripple { display: none; animation: none; }
+  .cover__video { display: none; }
 }
