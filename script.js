@@ -722,7 +722,7 @@ function buildGallery () {
   /* the constellation — width/height reserve each box before it loads */
   if (stills) {
     stills.innerHTML = PHOTOS.map((p, i) => `
-      <figure class="still${p.span === 'pano' ? ' still--pano' : ''}" data-i="${i}"
+      <figure class="still${p.span ? ' still--' + p.span : ''}" data-i="${i}"
               role="button" tabindex="0"
               aria-label="Open photo ${i + 1}: ${p.alt || ''}">
         <img src="${p.src}" alt="${p.alt || ''}" ${p.w ? `width="${p.w}"` : ''} ${p.h ? `height="${p.h}"` : ''}

@@ -744,46 +744,62 @@ button {
    height, so there is no such thing as a short tile leaving a hole beside a
    tall one. Pictures keep their own aspect ratio via width/height attributes,
    which also means the boxes are reserved before the bytes land — no CLS. */
+/* Locked 2-column CSS Grid layout for Gallery — consistent on PC, tablet, and mobile */
 .stills {
-  --gap: clamp(.28rem, 1.3vw, .42rem);   /* ~40% tighter than before */
-  columns: 2;
-  column-gap: var(--gap);
-  margin-top: clamp(.55rem, 2.4vw, .8rem);
-  orphans: 1; widows: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(.38rem, 1.8vw, .65rem);
+  margin-top: clamp(.7rem, 2.8vw, 1.1rem);
+  width: 100%;
 }
+
 .still {
   position: relative;
   display: block;
   overflow: hidden;
-  margin: 0 0 var(--gap);
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid var(--line);
   box-shadow: var(--shadow-soft);
   cursor: zoom-in;
   background: var(--ivory-deep);
+  aspect-ratio: 4 / 3;
+  transition: transform .45s var(--ease), box-shadow .45s var(--ease), border-color .45s var(--ease);
   will-change: transform;
-  transition: box-shadow .5s var(--ease), border-color .5s var(--ease);
 }
+
 .still img {
   width: 100%;
-  height: auto;              /* intrinsic ratio from the width/height attrs */
+  height: 100%;
+  object-fit: cover;
   display: block;
   transition: transform .9s var(--ease-out);
 }
-.still:hover { border-color: var(--gold); box-shadow: var(--shadow-lift); }
-.still:hover img { transform: scale(1.06); }
+
+.still:hover {
+  transform: translateY(-3px);
+  border-color: var(--gold);
+  box-shadow: var(--shadow-lift);
+}
+
+.still:hover img {
+  transform: scale(1.06);
+}
+
 .still::after {
   content: '';
   position: absolute; inset: 0;
   pointer-events: none;
   background: linear-gradient(190deg, rgba(255,252,244,.14), transparent 42%);
 }
-/* a banner picture breaks out and runs the full width */
+
 .still--pano {
-  column-span: all;
-  margin-bottom: var(--gap);
+  grid-column: 1 / -1;
+  aspect-ratio: 2.35 / 1;
+}
+
+.still--tall {
+  grid-row: span 2;
+  aspect-ratio: 0.72 / 1;
 }
 
 /* an image that fails to load leaves an elegant plate, never a broken icon */
@@ -1081,11 +1097,7 @@ button {
 
 /* ═════════════════════════════════════════════════ 18 · RESPONSIVE ═══ */
 
-/* ---- larger phones / small tablets ---- */
-@media (min-width: 480px) {
-  .still--tall { grid-column: span 3; }
-  .still--box  { grid-column: span 3; }
-}
+
 
 /* ---- the invitation becomes a floating card ---- */
 @media (min-width: 700px) {

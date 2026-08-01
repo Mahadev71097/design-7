@@ -69,13 +69,13 @@ window.WEDDING_CONFIG = {
      browser reserves the right box before the bytes arrive (zero CLS).
      `span: 'pano'` makes a picture run the full width as a banner. */
   gallery: [
-    { src: 'assets/gallery/01.webp', alt: 'The couple forehead to forehead', w: 284, h: 390 },
+    { src: 'assets/gallery/01.webp', alt: 'The couple forehead to forehead', w: 284, h: 390, span: 'tall' },
     { src: 'assets/gallery/02.webp', alt: 'Beneath the floral arch',         w: 288, h: 222 },
     { src: 'assets/gallery/03.webp', alt: 'Mehendi hands, rings on',         w: 288, h: 147 },
     { src: 'assets/gallery/04.webp', alt: 'Seated together at the mandap',   w: 606, h: 252, span: 'pano' },
     { src: 'assets/gallery/05.webp', alt: 'A quiet moment between the two',  w: 276, h: 212 },
     { src: 'assets/gallery/06.webp', alt: 'Temple jewellery, close',         w: 276, h: 149 },
-    { src: 'assets/gallery/07.webp', alt: 'The twirl',                       w: 312, h: 384 }
+    { src: 'assets/gallery/07.webp', alt: 'The twirl',                       w: 312, h: 384, span: 'tall' }
   ],
 
   gallerySlideMs: 3000,        // crossfade interval for the cinema stage
