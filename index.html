@@ -27,34 +27,48 @@
      it, and it settles on its own final frame — the same image the hero uses
      as a backdrop, so the handover between the two is invisible. -->
 <div class="cover" id="cover" hidden>
-  <img class="cover__poster" id="coverPoster" src="" alt="" decoding="async">
+  <!-- a blurred wash of the poster, so the letterboxing on wide screens reads
+       as depth rather than as two black bars -->
+  <div class="cover__backdrop" id="coverBackdrop" aria-hidden="true"></div>
 
-  <video class="cover__video" id="coverVideo"
-         playsinline webkit-playsinline muted preload="auto"
-         disablepictureinpicture aria-hidden="true"></video>
+  <!-- The stage. Full-bleed on a phone; a 9:16 portrait card on anything
+       wider, so a laptop shows the film in the ratio it was shot in. -->
+  <div class="cover__frame">
+    <img class="cover__poster" id="coverPoster" src="" alt="" decoding="async">
 
-  <div class="cover__veil" aria-hidden="true"></div>
+    <video class="cover__video" id="coverVideo"
+           playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true"
+           muted preload="auto" disablepictureinpicture aria-hidden="true"></video>
 
-  <div class="cover__body" id="coverBody">
-    <svg class="orn orn--fleuron" viewBox="0 0 120 44" fill="none" stroke="currentColor"
-         stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <use href="#i-fleuron"/>
-    </svg>
+    <div class="cover__veil" aria-hidden="true"></div>
 
-    <p class="cover__eyebrow" data-cover-eyebrow>You are invited to celebrate</p>
+    <div class="cover__body" id="coverBody">
+      <svg class="orn orn--fleuron" viewBox="0 0 120 44" fill="none" stroke="currentColor"
+           stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <use href="#i-fleuron"/>
+      </svg>
 
-    <p class="cover__names">
-      <span class="cover__groom" data-cover-groom>Karan</span>
-      <span class="cover__amp" aria-hidden="true">&amp;</span>
-      <span class="cover__bride" data-cover-bride>Yashaswini</span>
-    </p>
+      <p class="cover__eyebrow" data-cover-eyebrow>You are invited to celebrate</p>
 
-    <button class="btn cover__cta" id="coverCta" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-           stroke-linejoin="round" aria-hidden="true"><use href="#i-heart"/></svg>
-      <span data-cover-cta>Tap to open</span>
-      <span class="btn__shine" aria-hidden="true"></span>
-    </button>
+      <p class="cover__names">
+        <span class="cover__groom" data-cover-groom>Karan</span>
+        <span class="cover__amp" aria-hidden="true">&amp;</span>
+        <span class="cover__bride" data-cover-bride>Yashaswini</span>
+      </p>
+
+      <button class="btn cover__cta" id="coverCta" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+             stroke-linejoin="round" aria-hidden="true"><use href="#i-heart"/></svg>
+        <span data-cover-cta>Tap to open</span>
+        <span class="btn__shine" aria-hidden="true"></span>
+        <span class="cover__hand-wrap" aria-hidden="true">
+          <span class="cover__hand-ripple"></span>
+          <svg class="cover__hand-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <use href="#i-hand-tap"/>
+          </svg>
+        </span>
+      </button>
+    </div>
   </div>
 
   <button class="cover__skip" id="coverSkip" type="button" hidden>
@@ -63,10 +77,12 @@
 </div>
 
 <!-- floating music control, top-right, above every section -->
-<button class="musicfab" id="musicFab" type="button" aria-pressed="false"
+<button class="musicfab iconbtn" id="musicFab" type="button" aria-pressed="false"
         aria-label="Play background music">
   <svg class="ico--play"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><use href="#i-play"/></svg>
   <svg class="ico--pause" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><use href="#i-pause"/></svg>
+  <!-- three bars that dance only while the track is actually running -->
+  <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
 </button>
 
 <!-- ambient wash that sits behind the invitation card on wide screens -->
@@ -106,9 +122,16 @@
   <g id="i-phone"><path d="M6.4 3.6h2.2l1.6 3.9-2 1.4a12.2 12.2 0 0 0 5.2 5.2l1.4-2 3.9 1.6v2.2a2 2 0 0 1-2.2 2A15.6 15.6 0 0 1 4.4 5.8a2 2 0 0 1 2-2.2z"/></g>
   <g id="i-copy"><rect x="9" y="9" width="11.5" height="11.5" rx="2.4"/><path d="M15.4 5.9V5.5A2.1 2.1 0 0 0 13.3 3.4H5.5A2.1 2.1 0 0 0 3.4 5.5v7.8a2.1 2.1 0 0 0 2.1 2.1h.4"/></g>
   <g id="i-check"><path d="M5 12.6 9.8 17.4 19 7.2"/></g>
+  <g id="i-chev"><path d="M6.5 9.5 12 15l5.5-5.5"/></g>
   <g id="i-close"><path d="M6 6l12 12M18 6 6 18"/></g>
   <g id="i-prev"><path d="M14.6 5.4 8 12l6.6 6.6"/></g>
   <g id="i-next"><path d="M9.4 5.4 16 12l-6.6 6.6"/></g>
+  <g id="i-hand-tap">
+    <path d="M14 11V4.5a1.5 1.5 0 1 0-3 0V12l-1.8-1.8a1.5 1.5 0 0 0-2.1 2.1l4.4 4.4c.9.9 2.1 1.5 3.4 1.5h3.2c2.8 0 5-2.2 5-5v-3.5a1.5 1.5 0 0 0-3 0V9a1.5 1.5 0 0 0-3 0v.5a1.5 1.5 0 0 0-1.5 1.5"/>
+    <path d="M12.5 1.5v2"/>
+    <path d="M8.5 3.5l1.4 1.4"/>
+    <path d="M16.5 3.5l-1.4 1.4"/>
+  </g>
 
 
   <!-- event icons, mirrored from assets/events/*.svg -->
@@ -207,9 +230,15 @@
       </picture>
     </div>
 
-    <div class="scroll-cue reveal" data-anim="hero" aria-hidden="true">
-      <span class="scroll-cue__line"></span>
-      <span>Scroll</span>
+    <!-- Right-side scroll guide. Shows itself for a few seconds once the hero
+         has settled, then retires so it never competes with the names. -->
+    <div class="scrollguide" id="scrollGuide" role="button" tabindex="0" aria-label="Scroll to next section">
+      <span class="scrollguide__label">Scroll</span>
+      <span class="scrollguide__track"><span class="scrollguide__dot"></span></span>
+      <svg class="scrollguide__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <use href="#i-chev"/>
+      </svg>
     </div>
   </section>
 
