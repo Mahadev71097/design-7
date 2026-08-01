@@ -506,14 +506,13 @@ function sectionAnimations () {
         } });
   });
 
-  /* 5 · GALLERY — the stills float up out of nothing -------------------- */
+  /* 5 · GALLERY — the stills reveal cleanly into place -------------------- */
   const stills = $$('.still');
   if (stills.length) {
     gsap.fromTo(stills,
-      { opacity: 0, scale: .86, y: 34 },
-      { opacity: 1, scale: 1, y: 0, duration: 1.15, ease: 'power3.out', stagger: .085,
-        scrollTrigger: { trigger: '#stills', start: 'top 88%', once: true },
-        onComplete () { floatStills(stills); } });
+      { opacity: 0, y: 24 },
+      { opacity: 1, y: 0, duration: 1.0, ease: 'power3.out', stagger: .07,
+        scrollTrigger: { trigger: '#stills', start: 'top 88%', once: true } });
   }
   const cinema = $('#cinema');
   if (cinema) {
@@ -726,7 +725,7 @@ function buildGallery () {
               role="button" tabindex="0"
               aria-label="Open photo ${i + 1}: ${p.alt || ''}">
         <img src="${p.src}" alt="${p.alt || ''}" ${p.w ? `width="${p.w}"` : ''} ${p.h ? `height="${p.h}"` : ''}
-             loading="lazy" decoding="async">
+             decoding="async">
       </figure>`).join('');
 
     /* a picture that never arrives leaves a quiet plate, not a broken icon */

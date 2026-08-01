@@ -763,8 +763,10 @@ button {
   cursor: zoom-in;
   background: var(--ivory-deep);
   aspect-ratio: 4 / 3;
-  transition: transform .45s var(--ease), box-shadow .45s var(--ease), border-color .45s var(--ease);
-  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: box-shadow .45s var(--ease), border-color .45s var(--ease);
 }
 
 .still img {
@@ -772,17 +774,19 @@ button {
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform .9s var(--ease-out);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: transform .6s var(--ease-out);
 }
 
 .still:hover {
-  transform: translateY(-3px);
   border-color: var(--gold);
   box-shadow: var(--shadow-lift);
 }
 
 .still:hover img {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
 .still::after {
