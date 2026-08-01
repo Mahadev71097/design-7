@@ -3,7 +3,7 @@
    ----------------------------------------------------------------------------
    01  Boot & capability guards      07  Countdown
    02  Content from config           08  Gallery cinema + stills
-   03  Preloader                     09  Fullscreen viewer
+   03  Warm-up                       09  Fullscreen viewer
    04  Lenis + ScrollTrigger         10  Buttons
    05  Text splitting                11  Music
    06  Section choreography          12  Atmosphere (dust, rays, silk)
@@ -42,8 +42,6 @@ function showEverything () {
     el.style.clipPath = 'none';
   });
   document.body.classList.remove('is-loading');
-  const pre = $('#preloader');
-  if (pre) pre.style.display = 'none';
 }
 
 /* deterministic pseudo-random — same layout rhythm on every load, so the
@@ -55,6 +53,11 @@ function seeded (i) {
 
 const CFG = window.WEDDING_CONFIG || {};
 let lenis = null;
+
+/* True when a cover film will stand in front of the page. Read from config
+   rather than from the DOM, because the music module initialises before the
+   cover does and would otherwise see a body that is not yet marked. */
+const COVER_PENDING = !!(CFG.intro && CFG.intro.enabled && CFG.intro.video);
 
 
 /* ═══════════════════════════════════════════ 02 · CONTENT FROM CONFIG ═══ */
@@ -79,6 +82,22 @@ function paintContent () {
   set('[data-bride]', c.bride);
   set('[data-joiner]', c.joiner);
   set('[data-hero-eyebrow]', c.tagline);
+
+  /* the cover, and the hero backdrop it hands over to */
+  const intro = CFG.intro || {};
+  set('[data-cover-groom]', c.groom);
+  set('[data-cover-bride]', c.bride);
+  set('[data-cover-eyebrow]', intro.eyebrow);
+  set('[data-cover-cta]', intro.cta);
+  set('[data-cover-skip]', intro.skip);
+  if (intro.enabled && intro.endFrame) {
+    /* The hero shows the film's last frame, so when the cover dissolves the
+       image behind it is already identical — nothing appears to change. */
+    const plate = $('#heroPlate');
+    if (plate) plate.src = intro.endFrame;
+  }
+  const hc = $('#heroCouple');
+  if (hc && c.groom && c.bride) hc.alt = c.groom + ' and ' + c.bride;
   set('[data-pre-groom]', (c.groom || 'M').charAt(0));
   set('[data-pre-bride]', (c.bride || 'Y').charAt(0));
 
@@ -91,6 +110,7 @@ function paintContent () {
   const og = $('meta[property="og:title"]'); if (og) og.setAttribute('content', pair);
 
   /* date -------------------------------------------------------------- */
+  set('[data-date-heading]', d.heading);
   set('[data-date-eyebrow]', d.eyebrow);
   set('[data-date-label]', d.label);
   set('[data-count-label]', d.countdownLabel);
@@ -142,99 +162,84 @@ function paintContent () {
   set('[data-map-label]', l.buttonLabel);
   const addr = $('[data-venue-addr]');
   if (addr && Array.isArray(l.address)) addr.innerHTML = l.address.join('<br>');
-  if (l.mapUrl) { $('#mapBtn').href = l.mapUrl; $('#venueMap').href = l.mapUrl; }
+  if (l.mapUrl) { $('#mapBtn').href = l.mapUrl; $('#venueMapLink').href = l.mapUrl; }
+  if (l.mapEmbed) $('#venueMap').src = l.mapEmbed;
   if (l.venueImage) $('#venueShot').src = l.venueImage;
-  if (l.mapImage)   $('#venueMap img').src = l.mapImage;
   if (l.name)       $('#venueShot').alt = l.name;
+  set('[data-copy-label]', l.copyLabel);
+
+  /* footer sign-off */
+  const made = $('[data-made-with]');
+  if (made && f.madeWith) {
+    made.innerHTML = f.madeWith
+      .replace('{bride}', c.bride || '')
+      .replace('{groom}', c.groom || '')
+      .replace('\u2764', '<span class="heart" aria-hidden="true">\u2764</span>');
+  }
 
   /* blessings --------------------------------------------------------- */
   set('[data-bless-quote]', b.quote);
   set('[data-bless-by]', b.attribution);
 
+  /* branding band ------------------------------------------------------ */
+  const br = CFG.brand || {};
+  const band = $('#brandBand');
+  if (band && br.name) {
+    band.hidden = false;
+    set('[data-brand-name]', br.name);
+    set('[data-brand-tagline]', br.tagline || '');
+    const a = $('#brandLink');
+    if (br.url) {
+      a.setAttribute('href', br.url);
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener noreferrer');
+    }
+  }
+
   /* footer links ------------------------------------------------------ */
-  const link = (id, href) => {
+  const who = (CFG.brand && CFG.brand.name) || 'us';
+  const link = (id, href, label) => {
     const el = $(id);
     if (!el) return;
-    if (href) el.href = href; else el.hidden = true;
+    if (href) { el.href = href; el.setAttribute('aria-label', label); }
+    else el.hidden = true;
   };
-  link('#igLink',  f.instagram);
-  link('#waLink',  f.whatsapp);
-  link('#telLink', f.phone);
+  link('#igLink',  f.instagram, who + ' on Instagram');
+  link('#waLink',  f.whatsapp,  'Message ' + who + ' on WhatsApp');
+  link('#telLink', f.phone,     'Call ' + who);
 }
 
 
-/* ═══════════════════════════════════════════════════════ 03 · PRELOADER ═══ */
-/* Real progress: we watch the images that actually matter, plus webfonts.
-   Because the curtain stays up until everything is decoded, the visitor
-   never sees a reflow — which is how we get to zero visible CLS. */
+/* ═════════════════════════════════════════════════════════ 03 · WARM-UP ═══ */
+/* There is no loading screen any more — the cover poster is the first thing
+   anyone sees, so a progress bar in front of it would just be a second door.
+   We still warm the critical images quietly in the background, and we hold
+   the page only until the poster itself can be painted. */
 
-function preload (done) {
-  const pre  = $('#preloader');
-  const bar  = $('#preBar');
-  const pct  = $('#prePct');
+function warmUp (done) {
+  const intro = CFG.intro || {};
+  const first = intro.enabled ? intro.poster : 'assets/hero/hero-bg.webp';
 
-  const urls = ['assets/hero/hero-bg.webp', 'assets/hero/couple.webp'];
-  (CFG.gallery || []).forEach(g => urls.push(g.src));
-  if (CFG.location) { urls.push(CFG.location.venueImage, CFG.location.mapImage); }
+  let released = false;
+  const release = () => { if (!released) { released = true; done(); } };
 
-  const jobs = urls.filter(Boolean);
-  const total = jobs.length + 1;                 // +1 for fonts
-  let loaded = 0, shown = 0, finished = false;
+  if (first) {
+    const im = new Image();
+    im.onload = im.onerror = release;
+    im.src = first;
+  } else release();
 
-  const tick = () => {
-    loaded++;
-    const target = Math.round((loaded / total) * 100);
-    if (HAS_GSAP) {
-      gsap.to({ v: shown }, {
-        v: target, duration: .5, ease: 'power2.out',
-        onUpdate: function () {
-          shown = this.targets()[0].v;
-          bar.style.width = shown + '%';
-          pct.textContent = Math.round(shown);
-        }
-      });
-    } else {
-      shown = target;
-      bar.style.width = target + '%';
-      pct.textContent = target;
-    }
-    if (loaded >= total) finish();
-  };
+  /* nobody waits on the network for longer than this */
+  setTimeout(release, 2200);
 
-  const finish = () => {
-    if (finished) return;
-    finished = true;
-    const close = () => {
-      document.body.classList.remove('is-loading');
-      pre.setAttribute('aria-hidden', 'true');
-      done();
-    };
-    if (HAS_GSAP) {
-      gsap.timeline({ delay: .25 })
-        .to(bar, { width: '100%', duration: .35, ease: 'power2.out' }, 0)
-        .to('.pre__box', { y: -14, opacity: 0, duration: .6, ease: 'power2.inOut' }, .2)
-        /* the hero begins under the curtain, so the two movements read as one */
-        .to(pre, { opacity: 0, duration: .7, ease: 'power2.inOut',
-          onStart: close,
-          onComplete () { pre.style.display = 'none'; }
-        }, .35);
-    } else {
-      pre.style.display = 'none';
-      close();
-    }
-  };
+  /* everything else loads behind the cover, while the visitor reads it */
+  const rest = ['assets/hero/couple.webp', 'assets/hero/hero-bg.webp', intro.endFrame]
+    .concat((CFG.gallery || []).map(g => g.src))
+    .concat(CFG.location ? [CFG.location.venueImage] : [])
+    .filter(Boolean);
 
-  jobs.forEach(src => {
-    const img = new Image();
-    img.onload = img.onerror = tick;             // a missing file must never stall us
-    img.src = src;
-  });
-
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(tick).catch(tick);
-  else tick();
-
-  /* hard ceiling — the curtain always lifts, whatever the network does */
-  setTimeout(finish, 5000);
+  const idle = window.requestIdleCallback || (fn => setTimeout(fn, 400));
+  idle(() => rest.forEach(src => { const i = new Image(); i.decoding = 'async'; i.src = src; }));
 }
 
 
@@ -344,8 +349,6 @@ function heroTimeline () {
   const groom   = $$('[data-groom] .char');
   const bride   = $$('[data-bride] .char');
 
-  gsap.set('#hero .reveal', { opacity: 1 });
-
   /* the arch draws itself before anything else appears */
   const arch = $('#archPath');
   if (arch && typeof arch.getTotalLength === 'function') {
@@ -356,9 +359,27 @@ function heroTimeline () {
     tl.fromTo('.arch', { opacity: 0 }, { opacity: 1, duration: 1.6 }, 0);
   }
 
+  /* a short highlight travels the curve once the arch has drawn */
+  const shine = $('#archShine');
+  if (shine && typeof shine.getTotalLength === 'function') {
+    const L = shine.getTotalLength();
+    const seg = L * .12;                       // length of the travelling glint
+    gsap.set(shine, { strokeDasharray: seg + ' ' + (L - seg), strokeDashoffset: L, opacity: 0 });
+    tl.to(shine, { opacity: .85, duration: .6 }, 2.0)
+      .to(shine, {
+        strokeDashoffset: -L, duration: 4.2, ease: 'sine.inOut',
+        repeat: -1, repeatDelay: 3.4
+      }, 2.0);
+  }
+
+  /* Opacity, scale and a soft focus-in — no clip-path. A clip wipe puts a
+     hard straight edge across the photograph while it travels, which reads
+     as a crop line over the couple's faces. This resolves into the breath. */
   tl.fromTo('.hero__couple',
-      { opacity: 0, scale: 1.06, yPercent: 4 },
-      { opacity: 1, scale: 1, yPercent: 0, duration: 1.8, ease: 'power2.out' }, .15)
+      { opacity: 0, scale: 1.055, yPercent: 3, filter: 'blur(12px)' },
+      { opacity: 1, scale: 1, yPercent: 0, filter: 'blur(0px)',
+        duration: 1.9, ease: 'power2.out', force3D: true,
+        onComplete: breathe }, .15)
     .fromTo('.hero__glow', { opacity: 0, scale: .82 },
       { opacity: 1, scale: 1, duration: 2.2, ease: 'power2.out' }, .25);
 
@@ -392,16 +413,21 @@ function heroTimeline () {
         filter: 'drop-shadow(0 0 9px rgba(182,140,70,.85))',
         scale: 1.12, duration: 1.1, yoyo: true, repeat: -1, ease: 'sine.inOut'
       }, '+=0.1')
-    .fromTo('.scroll-cue', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: .8 }, '-=1.6');
+    .fromTo('.scrollguide', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: .8 }, '-=1.6');
 
   return tl;
 }
 
-function ambientLoops () {
-  /* the hero image breathes, forever */
+function breathe () {
+  /* Started only after the hero reveal resolves — never alongside it. Two
+     tweens on one property is what produced the sudden flick. */
   gsap.to('#heroCouple', {
-    scale: 1.02, duration: 7, ease: 'sine.inOut', yoyo: true, repeat: -1
+    scale: 1.015, duration: 7, ease: 'sine.inOut',
+    yoyo: true, repeat: -1, overwrite: 'auto', force3D: true
   });
+}
+
+function ambientLoops () {
   /* light shifts across the arch */
   gsap.to('.rays', {
     xPercent: 6, rotation: -4, opacity: .34, duration: 16,
@@ -424,8 +450,8 @@ function parallaxSections () {
   $$('.section').forEach(sec => {
     const plate = $('.section__bg img', sec);
     if (plate) {
-      gsap.fromTo(plate, { yPercent: -7 }, {
-        yPercent: 7, ease: 'none',
+      gsap.fromTo(plate, { yPercent: -4 }, {
+        yPercent: 4, ease: 'none',
         scrollTrigger: { trigger: sec, start: 'top bottom', end: 'bottom top', scrub: .6 }
       });
     }
@@ -459,7 +485,7 @@ function sectionAnimations () {
     gsap.fromTo(cells,
       { opacity: 0, y: 40, rotateX: -32, transformOrigin: '50% 100%' },
       { opacity: 1, y: 0, rotateX: 0, duration: 1, ease: 'power3.out', stagger: .1,
-        scrollTrigger: { trigger: '#countGrid', start: 'top 86%', once: true } });
+        scrollTrigger: { trigger: '#countGrid', start: 'top 92%', once: true } });
   }
 
   /* 4 · EVENTS — cards slide in from alternating sides ------------------ */
@@ -468,7 +494,16 @@ function sectionAnimations () {
     gsap.fromTo(el,
       { opacity: 0, x: fromLeft ? -46 : 46, rotate: fromLeft ? -1 : 1 },
       { opacity: 1, x: 0, rotate: 0, duration: 1.05, ease: 'power3.out',
-        scrollTrigger: { trigger: el, start: 'top 90%', once: true } });
+        scrollTrigger: { trigger: el, start: 'top 90%', once: true },
+        onComplete () {
+          /* the gold catches the light for half a second, then settles */
+          gsap.fromTo(el,
+            { borderColor: 'rgba(182,140,70,.85)',
+              boxShadow: '0 10px 30px rgba(182,140,70,.28)' },
+            { borderColor: 'rgba(182,140,70,.34)',
+              boxShadow: '0 2px 10px rgba(182,140,70,.08)',
+              duration: .5, ease: 'power2.out' });
+        } });
   });
 
   /* 5 · GALLERY — the stills float up out of nothing -------------------- */
@@ -684,14 +719,29 @@ function buildGallery () {
       `<span class="cinema__dot${i === 0 ? ' is-on' : ''}"></span>`).join('');
   }
 
-  /* the constellation */
+  /* the constellation — width/height reserve each box before it loads */
   if (stills) {
     stills.innerHTML = PHOTOS.map((p, i) => `
-      <figure class="still still--${p.span || 'wide'}" data-i="${i}" role="button" tabindex="0"
+      <figure class="still${p.span === 'pano' ? ' still--pano' : ''}" data-i="${i}"
+              role="button" tabindex="0"
               aria-label="Open photo ${i + 1}: ${p.alt || ''}">
-        <img src="${p.src}" alt="${p.alt || ''}" loading="lazy" decoding="async">
+        <img src="${p.src}" alt="${p.alt || ''}" ${p.w ? `width="${p.w}"` : ''} ${p.h ? `height="${p.h}"` : ''}
+             loading="lazy" decoding="async">
       </figure>`).join('');
+
+    /* a picture that never arrives leaves a quiet plate, not a broken icon */
+    $$('.still img', stills).forEach(im => {
+      im.addEventListener('error', () => im.closest('.still').classList.add('is-missing'));
+    });
   }
+}
+
+/* Neighbours are fetched ahead of time so browsing the viewer is instant. */
+function preloadNeighbours (i) {
+  [-1, 1].forEach(d => {
+    const p = PHOTOS[(i + d + PHOTOS.length) % PHOTOS.length];
+    if (p) { const im = new Image(); im.decoding = 'async'; im.src = p.src; }
+  });
 }
 
 function runCinema () {
@@ -779,7 +829,8 @@ function initViewer () {
   const all    = $('#vwAll');
   if (!vw || !PHOTOS.length) return;
 
-  all.textContent = PHOTOS.length;
+  let LIST = PHOTOS;
+  all.textContent = LIST.length;
 
   let index = 0, scale = 1, tx = 0, ty = 0;
   let lastFocus = null;
@@ -800,9 +851,11 @@ function initViewer () {
   const reset = (dur) => { scale = 1; tx = 0; ty = 0; apply(dur); };
 
   function show (i, dir) {
-    index = (i + PHOTOS.length) % PHOTOS.length;
-    const p = PHOTOS[index];
+    index = (i + LIST.length) % LIST.length;
+    const p = LIST[index];
     now.textContent = index + 1;
+    all.textContent = LIST.length;
+    if (LIST === PHOTOS) preloadNeighbours(index);
     reset(0);
     if (ANIMATE) {
       gsap.to(img, { opacity: 0, x: dir ? -dir * 40 : 0, duration: .2, ease: 'power2.in',
@@ -815,7 +868,8 @@ function initViewer () {
     } else { img.src = p.src; img.alt = p.alt || ''; }
   }
 
-  openViewer = function (i) {
+  openViewer = function (i, list) {
+    LIST = (list && list.length) ? list : PHOTOS;
     lastFocus = document.activeElement;
     vw.classList.add('is-open');
     document.body.classList.add('no-scroll');
@@ -836,8 +890,8 @@ function initViewer () {
     else finish();
   }
 
-  const next = () => show(index + 1,  1);
-  const prev = () => show(index - 1, -1);
+  const next = () => { if (LIST.length > 1) show(index + 1,  1); };
+  const prev = () => { if (LIST.length > 1) show(index - 1, -1); };
 
   $('#vwClose').addEventListener('click', close);
   $('#vwNext').addEventListener('click', next);
@@ -953,18 +1007,70 @@ function initViewer () {
 }
 
 
+/* ══════════════════════════════════════════════════════ 9b · LOCATION ═══ */
+
+function initLocation () {
+  const l = CFG.location || {};
+
+  /* tapping the venue photograph opens it fullscreen, like any other picture */
+  const shot = $('.venue__shot');
+  if (shot) {
+    shot.setAttribute('role', 'button');
+    shot.setAttribute('tabindex', '0');
+    shot.setAttribute('aria-label', 'View the venue photograph fullscreen');
+    const openVenue = () => openViewer(0, [{ src: l.venueImage, alt: l.name || 'The venue' }]);
+    shot.addEventListener('click', openVenue);
+    shot.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openVenue(); }
+    });
+    const img = $('img', shot);
+    if (img) img.addEventListener('error', () => shot.classList.add('is-missing'));
+  }
+
+  /* copy the address — with a clipboard fallback for older browsers */
+  const btn = $('#copyBtn');
+  if (btn && Array.isArray(l.address)) {
+    const text = [l.name].concat(l.address).filter(Boolean).join(', ');
+    const label = $('[data-copy-label]', btn);
+    const icon  = $('use', btn);
+
+    btn.addEventListener('click', () => {
+      const done = () => {
+        btn.classList.add('is-copied');
+        if (label) label.textContent = l.copiedLabel || 'Address copied';
+        if (icon)  icon.setAttribute('href', '#i-check');
+        setTimeout(() => {
+          btn.classList.remove('is-copied');
+          if (label) label.textContent = l.copyLabel || 'Copy address';
+          if (icon)  icon.setAttribute('href', '#i-copy');
+        }, 2200);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => legacy());
+      } else legacy();
+
+      function legacy () {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:absolute;left:-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) {}
+        ta.remove();
+      }
+    });
+  }
+}
+
+
 /* ═════════════════════════════════════════════════════════ 10 · BUTTONS ═══ */
 
 function initButtons () {
-  /* a shimmer crosses the gold every six seconds */
-  if (ANIMATE) {
-    $$('.btn__shine').forEach(sh => {
-      gsap.fromTo(sh, { xPercent: -260 }, {
-        xPercent: 460, duration: 1.15, ease: 'power2.inOut',
-        repeat: -1, repeatDelay: 6, delay: 2
-      });
-    });
-  }
+  /* The shimmer is a CSS keyframe animation (see style.css). It used to be a
+     GSAP tween, but a tween holds its END value through repeatDelay, which
+     left the highlight parked visibly across the middle of the button between
+     sweeps. Keyframes return to a fully off-screen, zero-opacity rest state. */
 
   /* and a ripple where the finger lands */
   $$('.btn').forEach(btn => {
@@ -990,39 +1096,106 @@ function initButtons () {
 /* ═══════════════════════════════════════════════════════════ 11 · MUSIC ═══ */
 
 function initMusic () {
+  const fab   = $('#musicFab');
   const btn   = $('#musicBtn');
   const audio = $('#bgAudio');
   const src   = CFG.footer && CFG.footer.music;
-  if (!btn || !audio || !src) return;
+  if (!audio || !src) return;
 
-  /* Only offer the control once we know the file is really there — a dead
-     button is worse than no button. */
+  /* Only reveal the controls once the file is genuinely playable — a dead
+     button is worse than no button at all. */
   audio.src = src;
   audio.volume = 0;
-  audio.addEventListener('canplaythrough', () => { btn.hidden = false; }, { once: true });
-  audio.addEventListener('error', () => { btn.hidden = true; });
-  try { audio.load(); } catch (e) { btn.hidden = true; }
+  audio.addEventListener('canplaythrough', () => {
+    if (fab) fab.classList.add('is-ready');
+    if (btn) btn.hidden = false;
+    /* only auto-resume when no cover is standing in the way */
+    if (wanted && !COVER_PENDING) play(true);
+  }, { once: true });
+  audio.addEventListener('error', () => {
+    if (fab) fab.classList.remove('is-ready');
+    if (btn) btn.hidden = true;
+  });
+  try { audio.load(); } catch (e) { if (fab) fab.classList.remove('is-ready'); }
+
+  /* remembered across refreshes, where storage is permitted */
+  let wanted = false;
+  try { wanted = localStorage.getItem('inv-music') === 'on'; } catch (e) {}
+  const remember = v => { try { localStorage.setItem('inv-music', v ? 'on' : 'off'); } catch (e) {} };
 
   let playing = false;
-  btn.addEventListener('click', () => {
-    if (playing) {
-      if (HAS_GSAP) gsap.to(audio, { volume: 0, duration: .6, onComplete: () => audio.pause() });
-      else { audio.pause(); }
-      btn.classList.remove('is-playing');
-      btn.setAttribute('aria-pressed', 'false');
-      btn.setAttribute('aria-label', 'Play background music');
-      playing = false;
-    } else {
-      const p = audio.play();
-      if (p && p.catch) p.catch(() => {});
-      if (HAS_GSAP) gsap.to(audio, { volume: .45, duration: 1.1 });
-      else audio.volume = .45;
-      btn.classList.add('is-playing');
-      btn.setAttribute('aria-pressed', 'true');
-      btn.setAttribute('aria-label', 'Pause background music');
-      playing = true;
-    }
+
+  function paint () {
+    [fab, btn].forEach(el => {
+      if (!el) return;
+      el.classList.toggle('is-playing', playing);
+      el.setAttribute('aria-pressed', playing ? 'true' : 'false');
+      el.setAttribute('aria-label', playing ? 'Pause background music'
+                                            : 'Play background music');
+    });
+  }
+
+  function play (silent) {
+    const p = audio.play();
+    if (p && p.catch) p.catch(() => {
+      /* autoplay refused — wait for the first real gesture */
+      playing = false; paint();
+    });
+    if (HAS_GSAP) gsap.to(audio, { volume: .45, duration: 1.1, ease: 'sine.out' });
+    else audio.volume = .45;
+    playing = true;
+    if (!silent) remember(true);
+    paint();
+  }
+
+  function pause () {
+    if (HAS_GSAP) gsap.to(audio, { volume: 0, duration: .6, ease: 'sine.in',
+                                   onComplete: () => audio.pause() });
+    else audio.pause();
+    playing = false;
+    remember(false);
+    paint();
+  }
+
+  /* Called by the cover the instant the film starts — the visitor's tap is
+     the gesture that makes playback permissible. */
+  window.__introMusic = () => {
+    if (playing || !audio.src) return;
+    if (audio.readyState >= 2) play();
+    /* not decoded yet — start the moment it is */
+    else audio.addEventListener('canplay', () => { if (!playing) play(); }, { once: true });
+  };
+
+  const toggle = () => (playing ? pause() : play());
+  if (fab) fab.addEventListener('click', toggle);
+  if (btn) btn.addEventListener('click', toggle);
+
+  /* Browsers block sound until the visitor interacts. If they had music on
+     last visit we resume at their first gesture — but ONLY once the cover has
+     gone. While the cover is up, the sole way to start audio is its button,
+     so a stray tap on the poster can never begin the track ahead of the film. */
+  function armResume () {
+    if (!wanted || playing) return;
+    const kick = () => { if (!playing) play(true); off(); };
+    const off = () => {
+      window.removeEventListener('pointerdown', kick);
+      window.removeEventListener('keydown', kick);
+    };
+    window.addEventListener('pointerdown', kick, { once: true });
+    window.addEventListener('keydown', kick, { once: true });
+  }
+  if (COVER_PENDING) {
+    /* held until the cover releases the page — see initCover */
+    window.__armMusicResume = armResume;
+  } else armResume();
+
+  /* never leave music playing behind a hidden tab */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && playing) audio.pause();
+    else if (!document.hidden && playing) { const p = audio.play(); if (p && p.catch) p.catch(() => {}); }
   });
+
+  paint();
 }
 
 
@@ -1092,6 +1265,222 @@ function initDust () {
 }
 
 
+/* ═════════════════════════════════════════════════════ 13 · COVER FILM ═══ */
+/* Poster -> one tap -> 5s film -> settles on its final frame -> dissolve.
+   `done` is the hero's starting gun: nothing in the hero animates until the
+   cover has cleared, so the reveal is never spent behind a curtain. */
+
+function initCover (done) {
+  const intro = CFG.intro || {};
+  const cover = $('#cover');
+
+  /* disabled, unsupported, or the visitor asked for less motion */
+  if (!cover || !intro.enabled || !intro.video) {
+    if (cover) cover.remove();
+    if (window.__armMusicResume) window.__armMusicResume();
+    return done();
+  }
+
+  const video   = $('#coverVideo');
+  const poster  = $('#coverPoster');
+  const body    = $('#coverBody');
+  const cta     = $('#coverCta');
+  const skipBtn = $('#coverSkip');
+
+  if (intro.poster) {
+    poster.src = intro.poster;
+    poster.alt = '';
+    const back = $('#coverBackdrop');
+    if (back) back.style.backgroundImage = 'url("' + intro.poster + '")';
+  }
+  cover.hidden = false;
+  document.body.classList.add('is-covered', 'no-scroll');
+  if (lenis) lenis.stop();
+
+  let finished = false;
+
+  /* Reduced motion: show the poster and the invitation to enter, but never
+     play the film. The tap goes straight through to the hero. */
+  if (!REDUCED) {
+    video.muted = true;
+    video.defaultMuted = true;
+    video.src = intro.video;
+    video.load();
+  }
+
+  function finish () {
+    if (finished) return;
+    finished = true;
+
+    document.body.classList.remove('is-covered', 'no-scroll');
+    if (lenis) lenis.start();
+
+    /* Start hero animation immediately as cover begins fading for smooth, continuous flow */
+    done();
+
+    const clear = () => {
+      cover.remove();                       // out of the DOM, out of the paint
+      try { video.pause(); video.removeAttribute('src'); video.load(); } catch (e) {}
+    };
+
+    if (ANIMATE) {
+      gsap.to(cover, { opacity: 0, duration: .8, ease: 'power2.inOut', onComplete: clear });
+    } else clear();
+  }
+
+  function play () {
+    cta.disabled = true;
+
+    /* The tap is the gesture browsers require, so this is the one moment we
+       can reliably start audio — and the ONLY thing on the cover permitted to
+       do it. The film and the music begin together, never apart. */
+    if (window.__introMusic) window.__introMusic();
+
+    if (REDUCED || !video.src) { finish(); return; }
+
+    /* the words step aside, then the film takes the screen */
+    if (ANIMATE) gsap.to(body, { opacity: 0, y: -12, duration: .55, ease: 'power2.in' });
+    else body.style.opacity = 0;
+
+    cover.classList.add('is-playing');
+    skipBtn.hidden = false;
+
+    video.muted = true;
+    video.defaultMuted = true;
+
+    const p = video.play();
+    if (p && p.catch) p.catch(finish);      // blocked or undecodable — move on
+
+    /* Freeze on the last frame. Some browsers blank a finished <video>, so we
+       pause a hair early and hold that frame rather than trusting `ended`. */
+    const freezeAt = () => {
+      const d = video.duration;
+      if (d && video.currentTime >= d - 0.08) {
+        video.pause();
+        video.removeEventListener('timeupdate', freezeAt);
+        setTimeout(finish, 350);   // hold the frame a beat before dissolving
+      }
+    };
+    video.addEventListener('timeupdate', freezeAt, { passive: true });
+    video.addEventListener('ended', () => { video.pause(); setTimeout(finish, 250); }, { once: true });
+    video.addEventListener('error', finish, { once: true });
+
+    /* a hard ceiling, so a stalled download can never trap anyone */
+    setTimeout(finish, 9000);
+  }
+
+  cta.addEventListener('click', play);
+  skipBtn.addEventListener('click', finish);
+  document.addEventListener('keydown', function esc (e) {
+    if (finished) return;
+    if (e.key === 'Escape') finish();
+    if ((e.key === 'Enter' || e.key === ' ') && document.activeElement === cta) return;
+  });
+
+  cta.focus({ preventScroll: true });
+}
+
+
+/* ══════════════════════════════════════════════ 14 · GUIDE & AUTO TOUR ═══ */
+
+/* The right-rail guide appears once the hero has settled and retires after
+   four seconds — long enough to be read, short enough not to nag. */
+function showScrollGuide () {
+  const g = $('#scrollGuide');
+  if (!g || REDUCED || !ANIMATE) return;
+
+  let gone = false;
+  const retire = () => {
+    if (gone) return;
+    gone = true;
+    gsap.to(g, { opacity: 0, x: 12, duration: .7, ease: 'power2.inOut',
+                 onComplete: () => { if (g.parentNode) g.style.display = 'none'; } });
+    window.removeEventListener('wheel', retire);
+    window.removeEventListener('touchstart', retire);
+  };
+
+  g.addEventListener('click', () => {
+    const nextSec = $('#date');
+    if (nextSec && lenis) {
+      lenis.scrollTo(nextSec, { duration: 1.2 });
+    }
+  });
+
+  gsap.fromTo(g, { opacity: 0, x: 12 }, { opacity: 1, x: 0, duration: .8, ease: 'power2.out', delay: .4 });
+  gsap.delayedCall(4.5, retire);
+  /* the moment they start scrolling it has done its job */
+  window.addEventListener('wheel', retire, { passive: true, once: true });
+  window.addEventListener('touchstart', retire, { passive: true, once: true });
+}
+
+/* If the hero sits untouched for five seconds, the page shows itself section by section:
+   a step-by-step tour down each section, and once it reaches the last section,
+   it jumps directly back to the hero section. Any input at all cancels it. */
+function initAutoTour () {
+  if (!lenis || REDUCED || !ANIMATE) return;
+
+  let spent = false, touring = false;
+  let stepTimer = null;
+  let timer = setTimeout(begin, 5000);
+
+  const cancel = () => {
+    clearTimeout(timer);
+    if (stepTimer) clearTimeout(stepTimer);
+    if (touring) { lenis.stop(); lenis.start(); }   // halt mid-flight
+    spent = true;
+    touring = false;
+    off();
+  };
+
+  const events = ['wheel', 'touchstart', 'pointerdown', 'keydown'];
+  const off = () => events.forEach(e => window.removeEventListener(e, cancel));
+  events.forEach(e => window.addEventListener(e, cancel, { passive: true }));
+
+  function begin () {
+    if (spent || window.scrollY > 40) { off(); return; }
+    touring = true;
+
+    const sections = $$('.section');
+    if (!sections.length) return;
+
+    let currentSecIdx = 0;
+
+    function stepNext () {
+      if (!touring || spent) return;
+
+      if (currentSecIdx < sections.length - 1) {
+        currentSecIdx++;
+        const target = sections[currentSecIdx];
+        lenis.scrollTo(target, {
+          duration: 1.5,
+          easing: t => 1 - Math.pow(1 - t, 3),
+          onComplete () {
+            if (!touring || spent) return;
+            stepTimer = setTimeout(stepNext, 2500); // 2.5s pause at each section
+          }
+        });
+      } else {
+        // Last section reached! Pause briefly, then jump directly back to hero section.
+        stepTimer = setTimeout(() => {
+          if (!touring || spent) return;
+          lenis.scrollTo(0, {
+            duration: 0.6,
+            easing: t => t,
+            onComplete () {
+              touring = false;
+              spent = true;
+              off();
+            }
+          });
+        }, 2200);
+      }
+    }
+
+    stepNext();
+  }
+}
+
+
 /* ════════════════════════════════════════════════════════════════ START ═══ */
 
 function start () {
@@ -1104,15 +1493,24 @@ function start () {
 
     initViewer();
     runCinema();
+    initMusic();          // before the cover, which starts it on tap
+    initLocation();
     initButtons();
-    initMusic();
 
     if (ANIMATE) {
       parallaxSections();
       sectionAnimations();
-      ambientLoops();
-      initDust();
-      heroTimeline();
+      /* the hero's own reveal and background loops are held back until the cover has cleared */
+      initCover(() => {
+        heroTimeline();
+        ambientLoops();
+        initDust();
+        ScrollTrigger.refresh();
+        showScrollGuide();
+        initAutoTour();
+        /* the cover is gone, so a returning visitor's music may resume */
+        if (window.__armMusicResume) window.__armMusicResume();
+      });
       ScrollTrigger.refresh();
 
       /* Safety net: anything wearing .reveal that no timeline ever claimed
@@ -1123,6 +1521,9 @@ function start () {
         });
       }, 2500);
     } else {
+      initCover(() => {
+        if (window.__armMusicResume) window.__armMusicResume();
+      });
       showEverything();
     }
   } catch (err) {
@@ -1139,7 +1540,8 @@ function boot () {
   } catch (err) {
     if (window.console) console.error('[invitation]', err);
   }
-  preload(start);
+  document.body.classList.remove('is-loading');
+  warmUp(start);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
