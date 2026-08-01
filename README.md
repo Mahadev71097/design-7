@@ -85,18 +85,6 @@ can simply dissolve without anything appearing to move. If you swap the video,
 re-export both frames together — `assets/video/README.md` has the exact ffmpeg
 commands.
 
-### Small behaviours worth knowing
-A guide appears on the hero's left rail for about three seconds, then retires —
-or leaves the moment you start scrolling.
-
-If the hero is left untouched for five seconds, the page travels slowly to the
-end and back, once, to show what is there. Any input cancels it instantly and
-it never offers again.
-
-On a laptop the opening film plays inside a 9:16 portrait card rather than
-filling the window, because it was shot portrait and cropping it to a landscape
-viewport throws most of the frame away.
-
 ## How it is built
 
 Plain HTML, CSS and JavaScript. GSAP + ScrollTrigger for choreography,
